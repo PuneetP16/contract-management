@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { type DataTableToolbarProps } from "@/types"
 import { DataTableViewOptions } from './ViewOptions'
-import { ContractForm } from '../forms/ContactForm'
+import { ContractForm } from '../forms/ContractForm'
 import { useContracts } from '@/contexts/ContractsContext'
 
 export function DataTableToolbar<TData>({
@@ -24,7 +24,7 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between flex-wrap gap-2">
       <div className="flex flex-1 items-center space-x-2">
         <Input
           placeholder="Search contracts..."
@@ -38,7 +38,7 @@ export function DataTableToolbar<TData>({
           <Button
             variant="ghost"
             onClick={() => table.resetColumnFilters()}
-            className="h-8 px-2 lg:px-3"
+            className="h-8 px-2 lg:px-3 sm:gap-1 gap-0.5"
           >
             Reset
             <X className="ml-2 h-4 w-4" />

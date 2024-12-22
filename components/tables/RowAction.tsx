@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { contractSchema, type DataTableRowActionsProps } from "@/types"
 import { toast } from "sonner"
 import { pusherClient } from "@/lib/pusher"
-import { ContractForm } from '@/components/forms/ContactForm'
+import { ContractForm } from '@/components/forms/ContractForm'
 import { useContracts } from '@/contexts/ContractsContext'
 
 function DeleteButton() {
