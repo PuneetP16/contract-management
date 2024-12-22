@@ -27,7 +27,7 @@ function getColumnTitle<TData>(column: Column<TData, unknown>): string {
 export function DataTableFilter<TData>({
   column,
 }: DataTableFilterProps<TData>) {
-  const { filterVariant } = (column.columnDef.meta ?? {}) as { filterVariant: "text" | "select" | "range" }
+  const { filterVariant } = (column.columnDef.meta ?? {}) as { filterVariant: "text" | "select" | "range" | "date" }
 
   if (!filterVariant || column.id === "actions") {
     return null
@@ -36,6 +36,22 @@ export function DataTableFilter<TData>({
   const columnFilterValue = column.getFilterValue()
   const facetedValues = column.getFacetedUniqueValues()
   const facetedMinMax = column.getFacetedMinMaxValues()
+
+  if (filterVariant === "date") {
+    return (
+      <div className="grid gap-2">
+        <Input
+          type="text"
+          value={(columnFilterValue ?? "") as string}
+          onChange={(event) =>
+            column.setFilterValue(event.target.value)
+          }
+          placeholder={`Filter ${getColumnTitle(column)}...`}
+          className="h-8 w-[150px] lg:w-[250px]"
+        />
+      </div>
+    )
+  }
 
   if (filterVariant === "range") {
     const minValue = facetedMinMax?.[0] ? Number(facetedMinMax[0]) : undefined
@@ -49,32 +65,29 @@ export function DataTableFilter<TData>({
             min={minValue}
             max={maxValue}
             value={(columnFilterValue as [number, number])?.[0] ?? ""}
-            onChange={(e) =>
+            onChange={(event) =>
               column.setFilterValue((old: [number, number]) => [
-                e.target.value,
+                event.target.value,
                 old?.[1],
               ])
             }
-            placeholder={`Min ${minValue !== undefined ? `(${minValue})` : ""}`}
-            className={cn(
-              "h-8 w-[70px] lg:w-[100px]"
-            )}
+            placeholder={`Min`}
+            className="h-8 w-[70px]"
           />
+          <span className="text-muted-foreground">to</span>
           <Input
             type="number"
             min={minValue}
             max={maxValue}
             value={(columnFilterValue as [number, number])?.[1] ?? ""}
-            onChange={(e) =>
+            onChange={(event) =>
               column.setFilterValue((old: [number, number]) => [
                 old?.[0],
-                e.target.value,
+                event.target.value,
               ])
             }
-            placeholder={`Max ${maxValue !== undefined ? `(${maxValue})` : ""}`}
-            className={cn(
-              "h-8 w-[70px] lg:w-[100px]"
-            )}
+            placeholder={`Max`}
+            className="h-8 w-[80px]"
           />
         </div>
       </div>

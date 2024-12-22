@@ -1,7 +1,8 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
-import { useActionState, useEffect } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
+import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +15,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { contractStatuses } from '@/data/constants'
-import { contractSchema, type FormState, type ContractFormProps, type ContractFormUpdate } from '@/types'
-import { z } from 'zod'
+import { contractSchema, type FormState, type ContractFormProps, type ContractFormUpdate, Contract } from '@/types'
 import { pusherClient } from '@/lib/pusher'
+import { generateUUID } from '@/lib/utils'
 
 const initialState: FormState = { message: null, errors: {} };
 
@@ -42,7 +43,7 @@ export async function handleContract(
     ...rawData,
     ...mode === 'create'
       ? {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         createdAt: new Date().toISOString(),
       }
       : {
@@ -53,15 +54,21 @@ export async function handleContract(
   });
 
   if (!validatedFields.success) {
-    console.error('validatedFields error', validatedFields.error.flatten().fieldErrors)
     return {
       message: `Failed to ${mode} contract`,
       errors: validatedFields.error.flatten().fieldErrors,
+      values: {
+        clientName: formData.get("clientName") as Contract["clientName"],
+        contractTitle: formData.get("contractTitle") as Contract["contractTitle"],
+        startDate: formData.get("startDate") as Contract["startDate"],
+        endDate: formData.get("endDate") as Contract["endDate"],
+        status: formData.get("status") as Contract["status"],
+        value: formData.get("value") as unknown as Contract["value"],
+      } as Contract
     }
   }
 
   const contract = validatedFields.data
-
 
   try {
     const socketId = pusherClient.connection.socket_id
@@ -77,13 +84,11 @@ export async function handleContract(
       }),
     })
 
-
     if (!response.ok) {
       throw new Error(`Failed to ${mode} contract`)
     }
 
     const data = await response.json()
-
 
     // Trigger local update immediately after successful API response
     if (onLocalUpdate) {
@@ -102,50 +107,70 @@ export async function handleContract(
     return {
       message: `Failed to ${mode} contract`,
       errors: { form: ['Something went wrong'] },
+      values: {
+        clientName: formData.get("clientName") as Contract["clientName"],
+        contractTitle: formData.get("contractTitle") as Contract["contractTitle"],
+        startDate: formData.get("startDate") as Contract["startDate"],
+        endDate: formData.get("endDate") as Contract["endDate"],
+        status: formData.get("status") as Contract["status"],
+        value: formData.get("value") as unknown as Contract["value"],
+      } as Contract
     }
   }
 }
 
 function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
   const { pending } = useFormStatus()
-  const text = mode === 'create' ? 'Creat' : 'Updat'
+  const text = mode === 'create' ? 'Create' : 'Update'
 
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? `${text}ing...` : `${text} Contract`}
+      {pending ? `${text.slice(0, -1)}ing...` : `${text} Contract`}
     </Button>
   )
 }
 
-export function ContractForm({ mode = 'create', initialData, onSuccess, onLocalUpdate }: ContractFormProps) {
+export function ContractForm({ 
+  mode = 'create',
+  initialData,
+  onSuccess,
+  onLocalUpdate
+}: ContractFormProps) {
   const [state, formAction] = useActionState(
     async (prevState: FormState, formData: FormData) =>
       handleContract(prevState, formData, mode, initialData, onLocalUpdate),
     initialState
   )
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const values = state?.values || initialData || {} as Contract
 
   useEffect(() => {
-    if (state.message && !state.errors) {
+    if (state?.message === `Contract ${mode}d successfully`) {
       if (onSuccess) {
         onSuccess()
       }
     }
-  }, [state, onSuccess])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.message, onSuccess])
 
   const formatDateForInput = (dateString: string) => {
     const date = new Date(dateString)
     return date.toISOString().split('T')[0]
   }
-
   return (
-    <form action={formAction} className="space-y-4">
+    <form 
+      ref={formRef}
+      action={formAction}
+      className="space-y-4"
+    >
       <div className="space-y-2 mt-2">
         <Label htmlFor="clientName">Client Name</Label>
         <Input
           id="clientName"
           name="clientName"
           placeholder="Enter client name"
-          defaultValue={initialData?.clientName}
+          defaultValue={values.clientName}
           aria-describedby="clientName-error"
           className='mt-2'
         />
@@ -163,9 +188,8 @@ export function ContractForm({ mode = 'create', initialData, onSuccess, onLocalU
           id="contractTitle"
           name="contractTitle"
           placeholder="Enter contract title"
-          defaultValue={initialData?.contractTitle}
+          defaultValue={values.contractTitle}
           aria-describedby="contractTitle-error"
-          required
         />
         {state.errors?.contractTitle &&
           state.errors.contractTitle.map((error: string) => (
@@ -183,9 +207,8 @@ export function ContractForm({ mode = 'create', initialData, onSuccess, onLocalU
               id="startDate"
               name="startDate"
               type="date"
-              defaultValue={initialData ? formatDateForInput(initialData.startDate) : undefined}
+              defaultValue={values.startDate && formatDateForInput(values.startDate)}
               aria-describedby="startDate-error"
-              required
             />
           </div>
           {state.errors?.startDate &&
@@ -202,9 +225,8 @@ export function ContractForm({ mode = 'create', initialData, onSuccess, onLocalU
               id="endDate"
               name="endDate"
               type="date"
-              defaultValue={initialData ? formatDateForInput(initialData.endDate) : undefined}
+              defaultValue={values.endDate && formatDateForInput(values.endDate)}
               aria-describedby="endDate-error"
-              required
             />
           </div>
           {state.errors?.endDate &&
@@ -218,7 +240,7 @@ export function ContractForm({ mode = 'create', initialData, onSuccess, onLocalU
 
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
-        <Select name="status" defaultValue={initialData?.status || "Draft"}>
+        <Select name="status" defaultValue={values.status || 'Draft'}>
           <SelectTrigger>
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
@@ -245,9 +267,8 @@ export function ContractForm({ mode = 'create', initialData, onSuccess, onLocalU
           name="value"
           type="number"
           placeholder="Enter contract value"
-          defaultValue={initialData?.value}
+          defaultValue={values.value}
           aria-describedby="value-error"
-          required
         />
         {state.errors?.value &&
           state.errors.value.map((error: string) => (

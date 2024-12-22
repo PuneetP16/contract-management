@@ -30,7 +30,6 @@ export function DataTableColumnHeader<TData, TValue>({
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-3 h-8 data-[state=open]:bg-accent"
           >
             <span className="ml-1">{title}</span>
             {column.getIsSorted() === "desc" ? (
@@ -55,11 +54,17 @@ export function DataTableColumnHeader<TData, TValue>({
             <ChevronsUpDown className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
             Reset
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-            <EyeOff className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-            Hide
-          </DropdownMenuItem>
+          {
+            column.getCanHide() && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
+                  <EyeOff className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+                  Hide
+                </DropdownMenuItem>
+              </>
+            )
+          }
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="pb-2">

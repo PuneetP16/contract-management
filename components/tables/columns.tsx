@@ -1,12 +1,21 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, FilterFn } from "@tanstack/react-table"
+import { format } from "date-fns"
 
-import { Contract, type DataTableColumnMeta } from "@/types"
+import { Contract, DataTableColumnMeta } from "@/types"
 import { formatIndianCurrency, formattedDate } from '@/lib/utils'
 import { DataTableColumnHeader } from './ColumnHeader'
 import { contractStatuses } from '@/data/constants'
 import { DataTableRowActions } from './RowAction'
+
+const dateFilterFn: FilterFn<Contract> = (row, columnId, value) => {
+  const cellValue = row.getValue<string>(columnId)
+  if (!cellValue) return false
+  const date = new Date(cellValue)
+  const formatted = format(date, "MMMM d, yyyy")
+  return formatted.toLowerCase().includes(String(value).toLowerCase())
+}
 
 export const columns: ColumnDef<Contract>[] = [
   {
@@ -81,6 +90,7 @@ export const columns: ColumnDef<Contract>[] = [
         </div>
       )
     },
+    filterFn: dateFilterFn,
     meta: {
       filterVariant: "text",
     } as DataTableColumnMeta,
@@ -99,6 +109,7 @@ export const columns: ColumnDef<Contract>[] = [
         </div>
       )
     },
+    filterFn: dateFilterFn,
     meta: {
       filterVariant: "text",
     } as DataTableColumnMeta,

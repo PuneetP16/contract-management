@@ -14,6 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { format } from "date-fns"
 
 import {
   Table,
@@ -29,6 +30,12 @@ import { DataTableToolbar } from './Toolbar'
 import { DataTablePagination } from './Pagination'
 import { DataTableRowActions } from './RowAction'
 import { DataTableProps, Contract } from '@/types'
+
+
+function formatDateForSearch(date: string): string {
+  if (!date) return ""
+  return format(new Date(date), "MMMM d, yyyy")
+}
 
 export function DataTable<TData, TValue>({
   columns,
@@ -63,11 +70,23 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    globalFilterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId)
+      if (!value) return false
+
+      let searchValue = value
+      if (columnId === 'startDate' || columnId === 'endDate') {
+        searchValue = formatDateForSearch(value as string)
+      }
+
+      return String(searchValue)
+        .toLowerCase()
+        .includes(String(filterValue).toLowerCase())
+    },
   })
 
   // Initialize URL params sync
   useTableUrlParams(table, ["actions"])
-
 
   return (
     <div className="space-y-4">
@@ -83,9 +102,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   )
                 })}

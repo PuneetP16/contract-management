@@ -88,6 +88,7 @@ export interface FormState {
     value?: string[];
     form?: string[];
   };
+  values?: Contract;
   data?: Contract;
 }
 

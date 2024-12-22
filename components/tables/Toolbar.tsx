@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { X } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,10 +48,12 @@ export function DataTableToolbar<TData>({
       <div className="flex items-center space-x-2">
         <Button
           variant="outline"
-          className="h-8 px-2 lg:px-3"
+          size="sm"
+          className="h-8 sm:gap-1 gap-0.5"
           onClick={() => setOpen(true)}
         >
-          Add Contract
+          <Plus className="h-4 w-4" />
+          <span className="text-sm">Add Contract</span>
         </Button>
         <DataTableViewOptions table={table} />
       </div>
