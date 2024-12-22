@@ -4,14 +4,15 @@ import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
+import { Theme } from '@/types'
 import { Button } from "@/components/ui/button"
 
 
 export function ModeToggle() {
   const { setTheme: applyTheme } = useTheme()
-  const [theme, setTheme] = React.useState('system')
+  const [theme, setTheme] = React.useState<Theme>('system')
 
-  const commitTheme = React.useCallback((theme: string) => {
+  const commitTheme = React.useCallback((theme: Theme) => {
     setTheme(theme)
     applyTheme(theme)
     localStorage.setItem('theme', theme)
@@ -20,7 +21,7 @@ export function ModeToggle() {
   React.useEffect(() => {
     const currentTheme = localStorage.getItem('theme')
     if (currentTheme) {
-      commitTheme(currentTheme)
+      commitTheme(currentTheme as Theme)
     } else {
       commitTheme('system')
     }

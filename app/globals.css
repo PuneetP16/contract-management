@@ -2,8 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+.highlight-created {
+  background-color: rgb(220 252 231); /* green-100 */
+}
+
+.dark .highlight-created {
+  background-color: rgb(21 128 61 / 0.2); /* dark:bg-green-900/20 */
+}
+
+.highlight-updated {
+  background-color: rgb(254 249 195); /* yellow-100 */
+}
+
+.dark .highlight-updated {
+  background-color: rgb(161 98 7 / 0.2); /* dark:bg-yellow-900/20 */
+}
+
+.highlight-deleted {
+  background-color: rgb(238, 184, 184); /* red-100 */
+}
+
+.dark .highlight-deleted {
+  background-color: rgb(153 27 27 / 0.2); /* dark:bg-red-900/20 */
 }
 
 @layer base {

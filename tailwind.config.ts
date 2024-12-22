@@ -13,8 +13,8 @@ export default {
         background: "hsl(var(--background))",
         lightBackground: "hsl(var(--light-background))",
         darkBackground: "hsl(var(--dark-background))",
-				lightPrimaryForeground: "hsl(var(--light-primary-foreground))",
-				darkPrimaryForeground: "hsl(var(--dark-primary-foreground))",
+        lightPrimaryForeground: "hsl(var(--light-primary-foreground))",
+        darkPrimaryForeground: "hsl(var(--dark-primary-foreground))",
         foreground: "hsl(var(--foreground))",
         card: {
           DEFAULT: "hsl(var(--card))",

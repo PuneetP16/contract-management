@@ -1,9 +1,15 @@
-import { Header } from '@/components/header';
+import { Suspense } from 'react'
 
-export default function Home() {
+import { Content } from '@/components/layouts/content'
+import { Header } from '@/components/layouts/header'
+
+export default async function TaskPage() {
   return (
-    <main className="flex flex-col">
-      <Header />
-    </main>
-  );
+    <div className='p-4 md:p-8'>
+      <Suspense fallback={<div className='h-screen flex items-center justify-center'>Loading...</div>}>
+        <Header />
+        <Content />
+      </Suspense>
+    </div>
+  )
 }
