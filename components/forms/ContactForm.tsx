@@ -27,6 +27,7 @@ export async function handleContract(
   initialData?: z.infer<typeof contractSchema>,
   onLocalUpdate?: (update: ContractFormUpdate) => void
 ): Promise<FormState> {
+
   const rawData = {
     clientName: formData.get('clientName'),
     contractTitle: formData.get('contractTitle'),
@@ -35,6 +36,7 @@ export async function handleContract(
     status: formData.get('status'),
     value: Number(formData.get('value')),
   }
+
 
   const validatedFields = contractSchema.safeParse({
     ...rawData,
@@ -51,6 +53,7 @@ export async function handleContract(
   });
 
   if (!validatedFields.success) {
+    console.error('validatedFields error', validatedFields.error.flatten().fieldErrors)
     return {
       message: `Failed to ${mode} contract`,
       errors: validatedFields.error.flatten().fieldErrors,
@@ -58,6 +61,7 @@ export async function handleContract(
   }
 
   const contract = validatedFields.data
+
 
   try {
     const socketId = pusherClient.connection.socket_id
@@ -73,11 +77,13 @@ export async function handleContract(
       }),
     })
 
+
     if (!response.ok) {
       throw new Error(`Failed to ${mode} contract`)
     }
 
     const data = await response.json()
+
 
     // Trigger local update immediately after successful API response
     if (onLocalUpdate) {
@@ -102,7 +108,7 @@ export async function handleContract(
 
 function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
   const { pending } = useFormStatus()
-  const text = mode === 'create' ? 'Create' : 'Update'
+  const text = mode === 'create' ? 'Creat' : 'Updat'
 
   return (
     <Button type="submit" disabled={pending}>

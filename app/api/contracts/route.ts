@@ -1,22 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
-
-import type { Contract } from "@/types";
 import { pusherServer } from "@/lib/pusher";
 import { contractSchema, type ContractUpdate } from "@/types";
-
-const dataFilePath = path.join(process.cwd(), "/data/contracts.json");
-
-async function getContractsData() {
-  const data = await fs.readFile(dataFilePath, "utf-8");
-  return JSON.parse(data);
-}
-
-async function saveContractsData(contracts: Contract[]) {
-  await fs.writeFile(dataFilePath, JSON.stringify(contracts, null, 2));
-}
+import { getContracts, createContract, updateContract, deleteContract } from "@/lib/db";
 
 async function notifyClients(update: ContractUpdate, socketId?: string) {
   try {
@@ -30,7 +16,7 @@ async function notifyClients(update: ContractUpdate, socketId?: string) {
 
 export async function GET() {
   try {
-    const contracts = await getContractsData();
+    const contracts = await getContracts();
     return NextResponse.json(contracts);
   } catch (error) {
     console.error("Error fetching contracts:", error);
@@ -44,31 +30,38 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { contract, socketId } = await request.json();
+    
+    // Ensure value is a number
     const validatedData = {
       ...contract,
       id: crypto.randomUUID(),
+      value: Number(contract.value),
       createdAt: new Date().toISOString(),
     };
 
-    const contracts = await getContractsData();
-    contracts.unshift(validatedData); 
-    await saveContractsData(contracts);
+    const parsedContract = contractSchema.parse(validatedData);
+    const newContract = await createContract(parsedContract);
 
-    // Notify clients about the new contract
     await notifyClients(
       {
         type: "contract.created",
-        data: validatedData,
+        data: newContract,
       },
       socketId
     );
 
-    return NextResponse.json(validatedData, { status: 201 });
+    return NextResponse.json(newContract, { status: 201 });
   } catch (error) {
     console.error("Error creating contract:", error);
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
-      { error: "Invalid contract data" },
-      { status: 400 }
+      { error: "Failed to create contract" },
+      { status: 500 }
     );
   }
 }
@@ -76,29 +69,30 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const { contract, socketId } = await request.json();
-    const validatedData = contractSchema.parse(contract);
+    const { id } = contract;
+    if (!id) {
+      return NextResponse.json(
+        { error: "Contract ID is required" },
+        { status: 400 }
+      );
+    }
 
-    const contracts = await getContractsData();
-    const index = contracts.findIndex(
-      (c: Contract) => c.id === validatedData.id
-    );
+    // Validate the contract data
+    const validatedData = contractSchema.parse({
+      ...contract,
+      value: Number(contract.value),
+      updatedAt: new Date().toISOString(),
+    });
 
-    if (index === -1) {
+    const updatedContract = await updateContract(id, validatedData);
+
+    if (!updatedContract) {
       return NextResponse.json(
         { error: "Contract not found" },
         { status: 404 }
       );
     }
 
-    const updatedContract = {
-      ...validatedData,
-      updatedAt: new Date().toISOString(),
-    };
-
-    contracts[index] = updatedContract;
-    await saveContractsData(contracts);
-
-    // Notify clients about the updated contract
     await notifyClients(
       {
         type: "contract.updated",
@@ -110,9 +104,15 @@ export async function PUT(request: Request) {
     return NextResponse.json(updatedContract);
   } catch (error) {
     console.error("Error updating contract:", error);
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
-      { error: "Invalid contract data" },
-      { status: 400 }
+      { error: "Failed to update contract" },
+      { status: 500 }
     );
   }
 }
@@ -128,21 +128,14 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const contracts = await getContractsData();
-    const index = contracts.findIndex((c: Contract) => c.id === id);
-
-    if (index === -1) {
+    const deletedContract = await deleteContract(id);
+    if (!deletedContract) {
       return NextResponse.json(
         { error: "Contract not found" },
         { status: 404 }
       );
     }
 
-    const deletedContract = contracts[index];
-    contracts.splice(index, 1);
-    await saveContractsData(contracts);
-
-    // Notify clients about the deleted contract
     await notifyClients(
       {
         type: "contract.deleted",
@@ -151,9 +144,15 @@ export async function DELETE(request: Request) {
       socketId
     );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(deletedContract);
   } catch (error) {
     console.error("Error deleting contract:", error);
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: "Failed to delete contract" },
       { status: 500 }

@@ -114,6 +114,33 @@ export interface ContractUpdate {
   data: Contract;
 }
 
+// Database Types
+export interface ContractRow {
+  id: string;
+  client_name: string;
+  contract_title: string;
+  start_date: Date;
+  end_date: Date;
+  status: Contract["status"];
+  value: string;
+  description: string | null;
+  created_at: Date;
+  updated_at: Date | null;
+}
+
+export interface ContractRowInput {
+  id: string;
+  client_name: string;
+  contract_title: string;
+  start_date: string;
+  end_date: string;
+  status: Contract["status"];
+  value: number;
+  description: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
 // Table Types
 export interface DataTableViewOptionsProps<TData> {
   table: Table<TData>;

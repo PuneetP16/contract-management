@@ -1,5 +1,16 @@
 [
   {
+    "id": "b4eb777d-c496-4da9-9de7-f078346e91f4",
+    "clientName": "Techbuzz",
+    "contractTitle": "News ",
+    "startDate": "2024-12-11",
+    "endDate": "2024-12-24",
+    "status": "Active",
+    "value": 2323,
+    "createdAt": "2024-12-22T14:18:03.904Z",
+    "updatedAt": "2024-12-22T14:18:24.970Z"
+  },
+  {
     "id": "4d8b981b-db7a-4f2b-87cb-45419402f8b3",
     "clientName": "Acme Corporation 2",
     "contractTitle": "Lease Developers",

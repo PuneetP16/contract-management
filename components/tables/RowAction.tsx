@@ -2,6 +2,7 @@
 
 import { MoreHorizontal, AlertTriangle } from "lucide-react"
 import { useState } from "react"
+import { useFormStatus } from "react-dom"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +19,26 @@ import { toast } from "sonner"
 import { pusherClient } from "@/lib/pusher"
 import { ContractForm } from '@/components/forms/ContactForm'
 import { useContracts } from '@/contexts/ContractsContext'
+
+function DeleteButton() {
+  const { pending } = useFormStatus()
+  return (
+    <Button
+      type="submit"
+      variant="destructive"
+      disabled={pending}
+    >
+      {pending ? (
+        <>
+          <span className="loading loading-spinner loading-xs mr-2"></span>
+          Deleting...
+        </>
+      ) : (
+        'Delete Contract'
+      )}
+    </Button>
+  )
+}
 
 export function DataTableRowActions<TData>({
   row,
@@ -150,20 +171,18 @@ export function DataTableRowActions<TData>({
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              Delete Contract
-            </Button>
-          </DialogFooter>
+          <form action={handleDelete}>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <DeleteButton />
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>
